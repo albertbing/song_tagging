@@ -1,0 +1,200 @@
+<div class="row">
+<div class="col-md-6">
+
+  
+  <ul id="current_songs" class="connectedSortable">
+  <% @songs.each do |song|%>
+    <li id="<%= song.id %>">
+      <label class="song_title show"><%= song.title%></label>
+      <input name="song[title]" class="edit song_title" value="<%=song.title%>"/>
+
+      <div class="song_tags show">
+        <% song.tags.each do |tag|%>
+          <div class="tag" id="<%= tag.id %>"><%=tag.name%>
+          </div>
+        <% end %>
+      </div>
+
+      <input name="tags" class="edit song_tags" value="<%=song.tags.map(&:name).join(' ')%>"/>
+    </li>
+  <% end %>
+</ul>
+  <%#= will_paginate @songs %>
+</div>
+
+
+<div class="col-md-6 panel panel-default ">
+  <div class="float_box">
+  <div class="panel-heading">
+    <h2 class="panel-title">Favorite Songs</h2>
+    <a id="download_link" href="/songs/download.csv" style="display:none;">Export</a>
+  </div>
+  <div class="panel-body">
+    <ul id="favorite_songs" class="connectedSortable">
+      <li id="favorite_holder">Drop your favorite songs here to export</li>
+    </ul>
+  </div>
+  </div>
+</div>
+</div>
+<script>
+  $('.edit-item').click(function(event){
+      event.preventDefault();
+      var target= $(this).parents('li')
+      $(target).find('.edit').show();
+      $(target).find('.show').hide();
+      return false;
+  });
+
+  $('.cancel-item').click(function(event){
+      event.preventDefault();
+      var target= $(this).parents('li')
+      $(target).find('.edit').hide();
+      $(target).find('.show').show();
+      $(target).find('.error').remove();
+      return false;
+  });
+
+  var res;
+  $('.save-item').click(function(event){
+      event.preventDefault();
+      var target= $(this).parents('li')
+      var url='/songs/' + $(target).attr('id');
+
+      $(target).find('.error').remove();
+      var params="id="+$(target).attr('id')+"&song[title]="+$(target).find('input.song_title').val()+ "&" + "tags=" + $(target).find('input.song_tags').val() + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+      $.ajax({
+          type: 'PATCH',
+          url: url,
+          data: params,
+          dataType: "json",
+          success: function(data) {
+              res=data;
+              console.log(data);
+              if (data.error)
+              {
+                  $(target).prepend('<div class="error">' + data.error + '</div>');
+                  //console.log('show error ' +  data.error);
+              }
+              else {
+                  $(target).find('.song_title').html(data.title);
+                  $(target).find('.song_tags').html(data.tags.map(function(obj){return obj.name}).join(' '));
+                  //$('#current_songs').prepend('<li id='+ data.id +'><label>'+ data.title+ '</label><p>'+ data.tags.map(function(obj){return obj.name}).join(' ') +'</p></li>')
+                  //console.log(data);
+                  $(target).find('.edit').hide();
+                  $(target).find('.show').show();
+              }
+          }
+      });
+
+
+      return false;
+  });
+
+  $('.delete-item').click(function(event){
+      event.preventDefault();
+      var target= $(this).parents('li')
+      var url='/songs/' + $(target).attr('id');
+
+      $(target).find('.error').remove();
+      var params="id="+$(target).attr('id') + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+      $.ajax({
+          type: 'DELETE',
+          url: url,
+          data: params,
+          dataType: "json",
+          success: function(data) {
+              res=data;
+              console.log(data);
+              if (data.error)
+              {
+                  $(target).prepend('<div class="error">' + data.error + '</div>');
+                  //console.log('show error ' +  data.error);
+              }
+              else {
+                  $(target).remove();
+
+              }
+          }
+      });
+
+
+      return false;
+  });
+
+
+    $( function() {
+        $( "#current_songs, #favorite_songs" ).sortable({
+            connectWith: ".connectedSortable"
+        }).disableSelection();
+    } );
+    var obj;
+    $( "#favorite_songs" ).on( "sortreceive", function( event, ui ) {
+        adjust_favourate();
+    } );
+    $( "#favorite_songs" ).on( "sortremove", function( event, ui ) {
+        adjust_favourate();
+    } );
+
+    function adjust_favourate(){
+        if ($('#favorite_songs .ui-sortable-handle:visible').size()>0)
+        {
+            $('#favorite_holder').hide();
+            $('#download_link').show();
+        }
+        else
+        {
+            $('#favorite_holder').show();
+            $('#download_link').hide();
+        }
+    }
+    $('#download_link').click(function(evt){
+        evt.preventDefault();
+        var ids=[];
+        $( "#favorite_songs .ui-sortable-handle:visible" ).each(function() {
+            ids.push($(this).attr('id'));
+        });
+        window.location=$("#download_link").attr('href')+ '?ids=' + JSON.stringify(ids);
+     });
+
+    // scroll to load more
+  var current_page=2;
+  $(window).scroll(function() {
+      if($(window).scrollTop() > $(document).height() - $(window).height()-2) {
+
+          //console.log('new load more');
+          // ajax call get data from server and append to the div
+          if (current_page > 0)   
+          {
+              $('#current_songs').append('<li id="loading_holder"><i class=\'icon-spinner icon-spin icon-large\'></i>Loading more...<i class="icon-upload icon-large"></i></li>');
+              $.ajax({
+                  url: '/songs?page=' + current_page,
+                  dataType: "json",
+                  success: function (data) {
+                      res = data;
+                      console.log('current_page: ' + current_page);
+                      $('#loading_holder').remove();
+                      if (data.error) {
+                          $('#current_songs').prepend('<div class="error"> Error happened while loading more</div>');
+                          //console.log('show error ' +  data.error);
+                      }
+                      else {
+                          $.each(data, function (i, song) {
+                              $('#current_songs').append('<li id=' + song.id + '><label>' + song.title + '</label><p>' + song.tags.map(function (obj) {
+                                  return obj.name
+                              }).join(' ') + '</p></li>')
+                          });
+                          if (data.length == 0)
+                              current_page = 0;
+                          else
+                              current_page += 1;
+                          //$('#current_songs').prepend('<li id='+ data.id +'><label>'+ data.title+ '</label><p>'+ data.tags.map(function(obj){return obj.name}).join(' ') +'</p></li>')
+                          //console.log(data);
+                      }
+                  }
+              });
+      }
+      }
+  });
+
+</script>

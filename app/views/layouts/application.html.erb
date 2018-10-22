@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SongTagging</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+    
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <%= yield :head %>
+  </head>
+
+  <body>
+  <div class="content">
+    <div class="header">
+      <div id="search">
+        <%@q = Song.ransack(params[:q])%>
+        <%= search_form_for @q do |f| %>
+                <%= f.text_field :title_cont, size: 15, :placeholder=>"title", class: "form-control js-quick-search-target" %>
+                <%= f.text_field :tags_name_cont, size: 15, :placeholder=>"tag", class: "form-control js-quick-search-target" %>
+
+            <button type='submit' tabindex="4" name='commit' class="btn btn-primary">SEARCH</button>
+        <% end %>
+      </div>
+      <ul class="miscNav">
+        <li><a href="/songs" title="songs" >Songs</a></li>
+        <% if current_user%>
+        <li><a href="/mysongs" title="songs" >My Songs</a></li>
+
+        <li class="myacunt"><a href="/users/sign_out"  title="Sign Out" >Sing Out</a></li>
+        <% else %>
+          <li class="myacunt"><a href="/users/sign_in"  title="Sign In" >Login</a></li>
+      <% end %>
+      </ul>
+    </div>
+
+    <%= yield %>
+ 
+  </div>
+  </body>
+</html>

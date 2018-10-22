@@ -1,0 +1,179 @@
+<div class="col-md-6">
+  <% if current_user %>
+
+    <p>Instructions:<br>
+      click &#10006; to remove tag. click &#10060; to delete ALL songs created by you with this tag.
+    </p>
+    <%= render partial: 'new_song' %>
+
+    <%#= render partial: 'remove_song_by_tag' %>
+  <% end %>
+  <hr>
+  <ul id="current_songs" class="connectedSortable">
+    <% @songs.each do |song|%>
+      <li id="<%= song.id %>">
+        <label class="song_title show"><%= song.title%></label>
+        <input name="song[title]" class="edit song_title" value="<%=song.title%>"/>
+        <% if current_user && song.created_by==current_user.id%>
+          <a href="#" class="show edit-item btn btn-default btn-sm icon-link with-tip action-pencil no-text" ><span class="icon icon-pencil"></span>&#9997;Edit</a>
+          <a href="#" class="delete-item btn btn-danger btn-sm icon-link with-tip action-delete no-text" ><span class="icon icon-pencil"></span>Delete</a>
+          <a href="#" class="edit cancel-item btn btn-primary btn-sm icon-link with-tip action-cancel no-text" >Cancel</a>
+          <a href="#" class="edit save-item btn btn-success btn-sm icon-link with-tip action-ok no-text">Submit</a>
+        <% end %>
+        <div class="song_tags show">
+          <% song.tags.each do |tag|%>
+            <div class="tag" id="<%= tag.id %>"><%=tag.name%><br>
+              <a hred="#" title="remove tag" class="remove_tag"><span class="glyphicon glyphicon-remove">&#10006;</span></a>
+              <br><a hred="#" title="remove tag and songs" class="remove_tag_and_songs"><span class="glyphicon glyphicon-remove">&#10060;</span></a>
+            </div>
+          <% end %>
+        </div>
+        <input name="tags" class="edit song_tags" value="<%=song.tags.map(&:name).join(' ')%>"/>
+        <div class="clear"></div>
+      </li>
+    <% end %>
+  </ul>
+  <%#= will_paginate @songs %>
+</div>
+
+
+
+<script>
+    $('.edit-item').click(function(event){
+        event.preventDefault();
+        var target= $(this).parents('li')
+        $(target).find('.edit').show();
+        $(target).find('.show').hide();
+        return false;
+    });
+
+    $('.cancel-item').click(function(event){
+        event.preventDefault();
+        var target= $(this).parents('li')
+        $(target).find('.edit').hide();
+        $(target).find('.show').show();
+        $(target).find('.error').remove();
+        return false;
+    });
+
+    var res;
+    $('.save-item').click(function(event){
+        event.preventDefault();
+        var target= $(this).parents('li')
+        var url='/songs/' + $(target).attr('id');
+
+        $(target).find('.error').remove();
+        var params="id="+$(target).attr('id')+"&song[title]="+$(target).find('input.song_title').val()+ "&" + "tags=" + $(target).find('input.song_tags').val() + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+        $.ajax({
+            type: 'PATCH',
+            url: url,
+            data: params,
+            dataType: "json",
+            success: function(data) {
+                res=data;
+                console.log(data);
+                if (data.error)
+                {
+                    $(target).prepend('<div class="error">' + data.error + '</div>');
+                    //console.log('show error ' +  data.error);
+                }
+                else {
+                    $(target).find('.song_title').html(data.title);
+                    $(target).find('.song_tags').html(data.tags.map(function(obj){return obj.name}).join(' '));
+                    //$('#current_songs').prepend('<li id='+ data.id +'><label>'+ data.title+ '</label><p>'+ data.tags.map(function(obj){return obj.name}).join(' ') +'</p></li>')
+                    //console.log(data);
+                    $(target).find('.edit').hide();
+                    $(target).find('.show').show();
+                }
+            }
+        });
+
+
+        return false;
+    });
+
+    $('.delete-item').click(function(event){
+        event.preventDefault();
+        var target= $(this).parents('li')
+        var url='/songs/' + $(target).attr('id');
+
+        $(target).find('.error').remove();
+        var params="id="+$(target).attr('id') + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+        $.ajax({
+            type: 'DELETE',
+            url: url,
+            data: params,
+            dataType: "json",
+            success: function(data) {
+                res=data;
+                console.log(data);
+                if (data.error)
+                {
+                    $(target).prepend('<div class="error">' + data.error + '</div>');
+                    //console.log('show error ' +  data.error);
+                }
+                else {
+                    $(target).remove();
+
+                }
+            }
+        });
+
+
+        return false;
+    });
+
+    $('.remove_tag').click(function(event){
+        event.preventDefault();
+        var target= $(this).parents('li');
+        var tag_target= $(this).parents('.tag');
+        var url='/songs/' + $(target).attr('id') + '/remove_tag';
+        $(target).css('border','1px solid yellow');
+        $(target).find('.error').remove();
+        var params="id="+$(target).attr('id') + "&tag_id="+ $(tag_target).attr('id') + "&authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+        $.ajax({
+            type: 'PUT',
+            url: url,
+            data: params,
+            dataType: "json",
+            success: function(data) {
+                res=data;
+                console.log(data);
+                if (data.error)
+                {
+                    $(target).prepend('<div class="error">' + data.error + '</div>');
+                    //console.log('show error ' +  data.error);
+                }
+                else {
+                    $(tag_target).remove();
+
+                }
+            }
+        });
+
+
+        return false;
+    });
+
+    var _current_tag_id;
+    $('.remove_tag_and_songs').click(function(event){
+        event.preventDefault();
+        var tag_target= $(this).parents('.tag');
+
+        var tag_id=$(tag_target).attr('id');
+        var_current_tag_id=tag_id;
+        remove_song_with_tag();
+        return false;
+    });
+    
+    function remove_song_with_tag(){
+        var tag_id=var_current_tag_id;
+        var target= $('.tag#'+tag_id).parents('li');
+        var the_to_be_deleted= $(target).find('.delete-item');
+        if (the_to_be_deleted.length>0){
+            $(the_to_be_deleted).click();
+            setTimeout(remove_song_with_tag,3000);
+        }
+    }
+
+</script>

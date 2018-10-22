@@ -1,0 +1,94 @@
+
+
+<h2>New Credit Card</h2>
+<% payment_method=Spree::PaymentMethod.where("name like '%Credit Card%'").first%>
+<div class="clearfix" >
+  <%= form_for @credit_card, :url => new_cc_update_subscription_path do |cc_form| %>
+    <%#= image_tag 'credit_cards/credit_card.gif', :id => 'credit-card-image', :class => 'pull-right', :width => '170', :height => '28' %>
+    <% param_prefix = "subscription_source" %>
+
+
+    <%= hidden_field_tag "#{param_prefix}[name]", "#{@subscription.bill_address.firstname} #{@subscription.bill_address.lastname}" %>
+
+
+    <p class="field form-group" data-hook="card_number">
+      <%= label_tag "card_number", Spree.t(:card_number) %>
+      <% options_hash = Rails.env.production? ? {:autocomplete => 'off'} : {} %>
+      <%= text_field_tag "#{param_prefix}[number]", '', options_hash.merge(:id => 'card_number', :class => 'form-control required cardNumber', :size => 19, :maxlength => 19, :autocomplete => "off") %>
+      <span id="card_type" style="display:none;">
+      ( <span id="looks_like" ><%= Spree.t(:card_type_is) %> <span id="type"></span></span>
+        <span id="unrecognized"><%= Spree.t(:unrecognized_card_type) %></span>
+      )
+    </span>
+    </p>
+
+    <div class="field form-group" data-hook="card_expiration">
+      <%= label_tag "card_expiry", Spree.t(:expiration) %>
+      <%= text_field_tag "#{param_prefix}[expiry]", '', :id => 'card_expiry', :class => "form-control required cardExpiry", :placeholder => "MM / YY" %>
+    </div>
+    <div class="field form-group" data-hook="card_code">
+      <%= label_tag "card_code", Spree.t(:card_code) %>
+      <%= text_field_tag "#{param_prefix}[verification_value]", '', options_hash.merge(:id => 'card_code', :class => 'form-control required cardCode', :size => 5) %>
+      <%= link_to "(#{Spree.t(:what_is_this)})", spree.content_path('cvv'), :target => '_blank', "data-hook" => "cvv_link", :id => "cvv_link" %>
+    </div>
+
+    <%= hidden_field_tag "#{param_prefix}[cc_type]", '', :id => "cc_type", :class => 'ccType' %>
+    <%= link_to "(#{Spree.t(:cancel)})", "#", :onclick => "$.unblockUI();" %>
+
+    <div class=" text-right form-buttons" data-hook="buttons">
+      <%= button_tag Spree.t(:submit_secure_payment), class: 'btn btn-lg btn-submit', :id => "checkout-link-button" %>
+    </div>
+  <% end %>
+</div>
+
+
+
+<script type="text/javascript">
+
+
+    $( '#card_number, input[name*=verification_value]' ).change( function(){
+        var that = $( this );
+        that.val( that.val().replace( /\D/gi, ""));
+    });
+
+    var res;
+    var url= '<%= new_cc_update_subscription_path(@subscription) %>';
+
+    $( '#new_credit_card').submit(function( evt ){
+        $('#errorExplanation').hide();
+        // form = $(form);
+        var form = $(this);
+        form.ajaxSubmit({
+            url: url,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data, status_text, xhr) {
+                res=data;
+                console.log(data)
+                if (data.error)
+                    $(form).prepend('<div class="error">' + data.error + '</div>')
+                else {
+                    //$('#payment_info').html(data);
+                    $('#name_on_card').html(data.name);
+                    $('#expiration').html(data.month+'/'+data.year);
+                    $('#display_number').html(data.last_digits);
+                    $('#cc_type').html(data.cc_type);
+
+                    $.unblockUI();
+                }
+            }
+        });
+        evt.preventDefault();
+
+    });
+
+    $('#checkout_form_payment input').on('keyup blur', function () { // fires on every keyup & blur
+        if ($('#checkout_form_payment').valid()) {                   // checks form for validity
+            $('#checkout-link-button').prop('disabled', false).removeClass("disabled");        // enables button
+        } else {
+            $('#checkout-link-button').prop('disabled', 'disabled');   // disables button
+        }
+    });
+
+
+</script>

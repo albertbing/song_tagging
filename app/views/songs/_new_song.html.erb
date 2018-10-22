@@ -1,0 +1,82 @@
+<% if flash[:alert] %>
+  <div class="alert alert-danger"><%= flash[:alert] %></div>
+<% end %>
+<button type='button' tabindex="4" name='commit' id="new_song_button" class="btn action-create btn-secondary">Create new song</button>
+<div id="new_song_section" style="display:none;">
+  <% @song=Song.new %>
+<%= form_for @song do |f| %>
+  <div id="">
+    <div class="form-group">
+      <%= f.text_field :title, :class => 'form-control',:tabindex => 1, autofocus: true, :placeholder=>"title" %><span class="required instruct">* 3 charactors at least</span>
+    </div>
+    <div class="form-group">
+      <input name="tags" id="tags" :class ="form-control" tabindex ="2" autofocus=true placeholder="tag1 tag2,tag3" /><span class="required instruct">* 3 charactors at least</span>
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button type='button' tabindex="4" name='commit' class="btn btn-secondary action-cancel">Cancel</button>
+      <button type='submit' tabindex="4" name='commit' class="btn btn-primary">SUBMIT</button>
+    </div>
+  </div>
+<% end %>
+</div>
+
+
+<script type="text/javascript">
+
+    var res;
+    $('#new_song .action-cancel').click(function(){$('#new_song_section').hide(); $('#new_song_button').show();});
+    $('#new_song_button').click(function(){$('#new_song_section').show(); $('#new_song_button').hide();});
+
+    $( '#new_song').submit(function( evt ){
+        $('.error').remove();
+        var form = $(this);
+        var url= '/songs';
+        var params="song[title]="+$('#song_title').val()+ "&" + "tags=" + $('#tags').val() + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params,
+            dataType: "json",
+            success: function(data) {
+                res=data;
+                console.log(data)
+                if (data.error)
+                    $(form).prepend('<div class="error">' + data.error + '</div>')
+                else {
+                    //$('#payment_info').html(data);
+                    if (data.id) {
+                        $('#song_title').val('');
+                        $('#tags').val('');
+                        $('#current_songs').find('li#'+data.id).remove();
+                    $('#current_songs').prepend('<li id='+ data.id +'><label>'+ data.title+ '</label><p>'+ data.tags.map(function(obj){return obj.name}).join(' ') +'</p></li>')
+                    }
+                    else
+                        $(form).prepend('<div class="error">Some error happened for your submit.</div>');
+                }
+            }
+        });
+
+        evt.preventDefault();
+
+    });
+
+   /*
+   form.ajaxSubmit({
+            url: url,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data, status_text, xhr) {
+                res=data;
+                console.log(data)
+                if (data.error)
+                    $(form).prepend('<div class="error">' + data.error + '</div>')
+                else {
+                    //$('#payment_info').html(data);
+                     consle.log(data);
+                    $.unblockUI();
+                }
+            }
+        });
+   * */
+</script>

@@ -1,0 +1,100 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, or any plugin's
+ * vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any other CSS/SCSS
+ * files in this directory. Styles in this file should be added after the last require_* statement.
+ * It is generally better to create a new file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ */
+
+@import 'bootstrap';
+
+.miscNav li {
+  margin: 0 30px;
+  display: inline-block;
+  font-size:26px;
+  vertical-align: top;
+}
+
+.content{width:980px;margin:auto}
+.header{border-bottom:2px solid #ccc;}
+
+.panel-default{border:1px solid #730E15;position:absolute;}
+
+.float_box{
+  border: 1px solid #730E15;
+  position: fixed;
+  right: 100px;
+  width: 400px;
+}
+
+.panel-title {
+  margin: 15px 10px;
+  font-size: 26px;
+  display: inline;
+}
+#download_link{
+  float:right;
+  margin:10px;
+}
+
+#favorite_songs{
+  min-height:100px;
+  border-top:1px solid #730E15;
+  #favorite_holder{
+    min-height:50px;
+  }
+}
+
+#current_songs,#favorite_songs{
+  li{
+    list-style: none;
+    padding:10px 10px 35px 20px;
+    clear: both;
+    &:before{
+      content:"\266C";
+    }
+  }
+}
+
+
+#new_song .form-group{
+  input{
+    width:300px;
+    display:inline-block;
+  }
+  .instruct{font-size:0.7em;}
+}
+#search{
+  float:right;
+ button{display:inline-block;}
+input{
+  width:100px;
+  display:inline-block;
+  &#q_title_cont{width:250px;}
+}
+}
+.miscNav{clear:both;}
+.edit{display:none;}
+.clear{clear:both;}
+
+.error{clear:both; color:red; border:1px solid red;}
+#loading_holder{min-height:100px;}
+
+.song_tags {
+  .tag {
+    float:left;
+    margin-right:10px;
+    padding-left:15px;
+    &:before{
+      content:"\2690";
+    }
+  }
+}

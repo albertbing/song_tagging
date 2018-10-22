@@ -1,0 +1,69 @@
+
+<button type='button' tabindex="4" name='commit' id="delete_songs_by_tag_button" class="btn action-create btn-secondary">Delete songs by tag</button>
+<div id="delete_songs_by_tag_section" style="display:none;">
+  <div id="">
+    <div class="form-group">
+      <input name="tags" id="tags" :class ="form-control" tabindex ="2" autofocus=true placeholder="tag1 tag2,tag3" /><span class="required instruct">* 3 charactors at least</span>
+    </div>
+    <div class="form-group">
+      <button type='button' tabindex="4" name='commit' class="btn btn-secondary action-cancel">Cancel</button>
+      <button type='submit' tabindex="4" name='commit' class="btn btn-primary">SUBMIT</button>
+    </div>
+  </div>
+
+</div>
+
+
+<script type="text/javascript">
+
+    var res;
+    $('#delete_songs_by_tag_section .action-cancel').click(function(){console.log('hide pop');$('#delete_songs_by_tag_button').show(); $('#delete_songs_by_tag_section').hide();});
+    $('#delete_songs_by_tag_button').click(function(){$('#delete_songs_by_tag_section').show(); $('#delete_songs_by_tag_button').hide();});
+
+    $( '#delete_songs_by_tag_section .btn-primary').click(function( evt ){
+        $('.error').remove();
+        var form = $(this);
+        var url='/songs/' + $(target).attr('id') + '/remove_tag';
+        var params="id="+$(target).attr('id')+"&song[title]="+$(target).find('input.song_title').val()+ "&" + "tags=" + $(target).find('input.song_tags').val() + "&" + "authenticity_token=" + encodeURIComponent($("input[name=authenticity_token]").val());
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: params,
+            dataType: "json",
+            success: function(data) {
+                res=data;
+                console.log(data)
+                if (data.error)
+                    $(form).prepend('<div class="error">' + data.error + '</div>')
+                else {
+                    //$('#payment_info').html(data);
+                    $('#current_songs').find('li#'+data.id).remove();
+                    $('#current_songs').prepend('<li id='+ data.id +'><label>'+ data.title+ '</label><p>'+ data.tags.map(function(obj){return obj.name}).join(' ') +'</p></li>')
+                    console.log(data);
+                }
+            }
+        });
+
+        evt.preventDefault();
+
+    });
+
+   /*
+   form.ajaxSubmit({
+            url: url,
+            dataType: 'json',
+            type: 'POST',
+            success: function(data, status_text, xhr) {
+                res=data;
+                console.log(data)
+                if (data.error)
+                    $(form).prepend('<div class="error">' + data.error + '</div>')
+                else {
+                    //$('#payment_info').html(data);
+                     consle.log(data);
+                    $.unblockUI();
+                }
+            }
+        });
+   * */
+</script>

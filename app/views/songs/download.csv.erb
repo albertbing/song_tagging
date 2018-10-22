@@ -1,0 +1,10 @@
+<% require "csv" -%>
+<%= raw('"song","tags"') %>
+<% @songs.each do |song|%>
+<%
+  row = []
+  row << "'#{song.title.to_s}'"
+  row << song.tags.map(&:name).join(",")
+-%>
+<%= raw(CSV.generate_line(row, {col_sep: ",", row_sep: "\n"}).gsub("\'","\"")) -%>
+<% end -%>
