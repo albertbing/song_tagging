@@ -1,5 +1,7 @@
 # README
 
+Test it at: http://www.albertbing.com/songs
+
 * Ruby version
 2.3.1
 
@@ -18,7 +20,7 @@ rake db:seed
 start the server
  bin/rails s
  
- browe at:
+ browse at:
  localhost:3000
  
  test logins:
